@@ -11,10 +11,29 @@
 
 set -o errexit
 set -o pipefail
-set -o nounset
 
 if [ "$#" -ne 1 ]; then
     >&2 echo "usage: $0 <path-to-repository-root>"
+    exit 1
+fi
+
+if [[ -z "$PYPI_USERNAME" ]]; then
+    echo "Must provide PYPI_USERNAME" 1>&2
+    exit 1
+fi
+
+if [[ -z "$PYPI_PASSWORD" ]]; then
+    echo "Must provide PYPI_PASSWORD" 1>&2
+    exit 1
+fi
+
+if [[ -z "$NUGET_PUBLISH_KEY" ]]; then
+    echo "Must provide NUGET_PUBLISH_KEY" 1>&2
+    exit 1
+fi
+
+if [[ -z "$NPM_TOKEN" ]]; then
+    echo "Must provide NPM_TOKEN" 1>&2
     exit 1
 fi
 
@@ -158,8 +177,7 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
             -u "${PYPI_PUBLISH_USERNAME}" -p "${PYPI_PASSWORD}" \
             "${SOURCE_ROOT}/sdk/python/bin/dist/*.tar.gz" \
 	    --skip-existing \
-            --verbose
-    fi
+        --verbose
 
     # Finally, publish the NuGet package if any exists.
     if [ -n "${NUGET_PUBLISH_KEY}" ]; then
