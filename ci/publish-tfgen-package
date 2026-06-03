@@ -22,7 +22,7 @@ if [[ -z "$PYPI_USERNAME" ]]; then
     exit 1
 fi
 
-if [[ -z "$PYPI_PASSWORD"] && ! [ -n "${NO_TFGEN_PYTHON_PACKAGE}" ]]; then
+if [[ -z "$PYPI_PASSWORD" && ! -n "${NO_TFGEN_PYTHON_PACKAGE:-}" ]]; then
     echo "Must provide PYPI_PASSWORD" 1>&2
     exit 1
 fi
