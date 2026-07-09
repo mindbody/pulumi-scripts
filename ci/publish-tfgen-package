@@ -179,11 +179,11 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
 	    --skip-existing \
         --verbose
 
-    # Finally, publish the NuGet package if any exists.
+    # Finally, publish the NuGet package if any exists and we didn't opt out.
     if [ -n "${NUGET_PUBLISH_KEY}" && ! -n "${NO_NUGET_PUBLISH:-}" ]; then
         find "${SOURCE_ROOT}/sdk/dotnet/bin/Debug/" -name '*.*.nupkg' \
             -exec dotnet nuget push -k "${NUGET_PUBLISH_KEY}" -s https://api.nuget.org/v3/index.json {} ';'
     else
-        echo "Skipping publishing NuGet package because of NO_NUGET_PUBLISH"
+        echo "Skipping publishing public NuGet package because of NO_NUGET_PUBLISH"
     fi
 fi
