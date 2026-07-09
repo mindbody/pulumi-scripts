@@ -27,7 +27,7 @@ if [[ -z "$PYPI_PASSWORD" && ! -n "${NO_TFGEN_PYTHON_PACKAGE:-}" ]]; then
     exit 1
 fi
 
-if [[ -z "$NUGET_PUBLISH_KEY" ]]; then
+if [[ -z "$NUGET_PUBLISH_KEY" && ! -n "${NO_NUGET_PUBLISH:-}" ]]; then
     echo "Must provide NUGET_PUBLISH_KEY" 1>&2
     exit 1
 fi
@@ -179,10 +179,11 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
 	    --skip-existing \
         --verbose
 
-    ## NOTE: We are publishing nuget packages to a private nuget server, so we don't need to publish them to the public nuget server.
     # Finally, publish the NuGet package if any exists.
-    #if [ -n "${NUGET_PUBLISH_KEY}" ]; then
-    #    find "${SOURCE_ROOT}/sdk/dotnet/bin/Debug/" -name '*.*.nupkg' \
-    #        -exec dotnet nuget push -k "${NUGET_PUBLISH_KEY}" -s https://api.nuget.org/v3/index.json {} ';'
-    #fi
+    if [ -n "${NUGET_PUBLISH_KEY}" && ! -n "${NO_NUGET_PUBLISH:-}" ]; then
+        find "${SOURCE_ROOT}/sdk/dotnet/bin/Debug/" -name '*.*.nupkg' \
+            -exec dotnet nuget push -k "${NUGET_PUBLISH_KEY}" -s https://api.nuget.org/v3/index.json {} ';'
+    else
+        echo "Skipping publishing NuGet package because of NO_NUGET_PUBLISH"
+    fi
 fi
