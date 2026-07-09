@@ -32,7 +32,7 @@ if [[ -z "$NUGET_PUBLISH_KEY" && ! -n "${NO_NUGET_PUBLISH:-}" ]]; then
     exit 1
 fi
 
-if [[ -z "$NPM_TOKEN" ]]; then
+if [[ -z "$NPM_TOKEN" && ! -n "${NO_NPM_PUBLISH:-}" ]]; then
     echo "Must provide NPM_TOKEN" 1>&2
     exit 1
 fi
@@ -103,7 +103,7 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
     #
     # We exploit the fact that `npm info <package-name>@<package-version>` has no output
     # when the package does not exist.
-    if [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" ]; then
+    if [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" && ! -n "${NO_NPM_PUBLISH:-}" ]; then
         if ! npm publish -tag "${NPM_TAG}"; then
 	    # if we get here, we have a TOCTOU issue, so check again
 	    # to see if it published. If it didn't bail out.
@@ -111,10 +111,12 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
 		echo "NPM publishing failed, aborting"
 		exit 1
 	    fi
-
+        
+        npm info 2>/dev/null
 	fi
+    else
+        echo "Skipping publishing public NPM package because of NO_NPM_PUBLISH"
     fi
-    npm info 2>/dev/null
 
     # And finally restore the original package.json.
     mv package.json package.json.publish
