@@ -1,0 +1,9 @@
+{
+  "name": "pulumi-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ancillary CI/build scripts for Pulumi's repositories.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
