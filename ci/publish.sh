@@ -42,7 +42,7 @@ grant_pulumi_accts_access() {
 
 # Upload the release(s) to our S3 bucket.
 PUBPREFIX=s3://eng.pulumi.com/releases/${RELEASENAME}
-for target in ${@:3}; do
+for target in "${@:3}"; do
     PUBTARGET=${PUBPREFIX}/${target}.tgz
     echo Publishing ${RELEASENAME}@${target} to: ${PUBTARGET}
     if [ -z "${FIRSTTARGET:-}" ]; then
