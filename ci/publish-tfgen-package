@@ -103,19 +103,18 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
     #
     # We exploit the fact that `npm info <package-name>@<package-version>` has no output
     # when the package does not exist.
-    if [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" && ! -n "${NO_NPM_PUBLISH:-}" ]; then
-        if ! npm publish -tag "${NPM_TAG}"; then
-	    # if we get here, we have a TOCTOU issue, so check again
-	    # to see if it published. If it didn't bail out.
-	    if [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" ]; then
-		echo "NPM publishing failed, aborting"
-		exit 1
-	    fi
-        
-        npm info 2>/dev/null
-	fi
-    else
+    if [ -n "${NO_NPM_PUBLISH}" ]; then
         echo "Skipping publishing public NPM package because of NO_NPM_PUBLISH"
+    elif [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" ]; then
+        if ! npm publish -tag "${NPM_TAG}"; then
+            # if we get here, we have a TOCTOU issue, so check again
+            # to see if it published. If it didn't bail out.
+            if [ "$(npm info ${PKG_NAME}@${PKG_VERSION})" == "" ]; then
+                echo "NPM publishing failed, aborting"
+                exit 1
+            fi            
+        fi
+        npm info 2>/dev/null
     fi
 
     # And finally restore the original package.json.
@@ -180,12 +179,13 @@ if [[ "${TRAVIS_OS_NAME:-}" == "linux" ]]; then
             "${SOURCE_ROOT}/sdk/python/bin/dist/*.tar.gz" \
 	    --skip-existing \
         --verbose
+    fi
 
     # Finally, publish the NuGet package if any exists and we didn't opt out.
-    if [ -n "${NUGET_PUBLISH_KEY}" && ! -n "${NO_NUGET_PUBLISH:-}" ]; then
+    if [ -n "${NO_NUGET_PUBLISH}" ]; then
+        echo "Skipping publishing public NuGet package because of NO_NUGET_PUBLISH"
+    elif [ -n "${NUGET_PUBLISH_KEY}" ]; then
         find "${SOURCE_ROOT}/sdk/dotnet/bin/Debug/" -name '*.*.nupkg' \
             -exec dotnet nuget push -k "${NUGET_PUBLISH_KEY}" -s https://api.nuget.org/v3/index.json {} ';'
-    else
-        echo "Skipping publishing public NuGet package because of NO_NUGET_PUBLISH"
     fi
 fi
