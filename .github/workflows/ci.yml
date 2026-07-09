@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  syntax:
+    name: Script syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Syntax-check every script by interpreter, discovering shell scripts by
+      # shebang so extension-less bash files (e.g. ci/run-at-head) are covered too.
+      - name: Check shell script syntax
+        run: |
+          set -euo pipefail
+          while IFS= read -r f; do
+            if head -1 "$f" | grep -qE '^#!.*(bash|sh)$'; then
+              echo "bash -n $f"
+              bash -n "$f"
+            fi
+          done < <(git ls-files)
+
+      - name: Check JavaScript syntax
+        run: |
+          set -euo pipefail
+          for f in $(git ls-files '*.js'); do
+            echo "node --check $f"
+            node --check "$f"
+          done
+
+      - name: Check Python syntax
+        run: |
+          set -euo pipefail
+          while IFS= read -r f; do
+            if head -1 "$f" | grep -qE '^#!.*python'; then
+              echo "py_compile $f"
+              python -m py_compile "$f"
+            fi
+          done < <(git ls-files)
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      # Start conservative: fail only on genuine errors, not style/info warnings,
+      # since these scripts have not been linted before. Tighten --severity over
+      # time (warning -> style) as findings are cleaned up.
+      - name: Run ShellCheck
+        run: |
+          set -euo pipefail
+          files=()
+          while IFS= read -r f; do
+            if head -1 "$f" | grep -qE '^#!.*(bash|sh)$'; then
+              files+=("$f")
+            fi
+          done < <(git ls-files)
+          printf 'Linting %d shell scripts\n' "${#files[@]}"
+          shellcheck --severity=error "${files[@]}"
+
+  powershell:
+    name: PSScriptAnalyzer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+          $results = Get-ChildItem -Recurse -Filter *.ps1 |
+            ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Severity Error }
+          $results | Format-Table -AutoSize
+          if ($results.Count -gt 0) {
+            Write-Error "PSScriptAnalyzer reported $($results.Count) error(s)"
+            exit 1
+          }
+
+  js-tests:
+    name: JavaScript tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run tests
+        run: npm test

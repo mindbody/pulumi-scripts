@@ -17,3 +17,6 @@ vendor/
 # IntelliJ Project Files
 .idea/
 *.iml
+
+# Node
+node_modules/
