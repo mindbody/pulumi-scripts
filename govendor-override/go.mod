@@ -18,6 +18,6 @@ require (
 	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
