@@ -107,3 +107,34 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  go:
+    name: Go build/vet/test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [gomod-doccopy, govendor-override, hack-vendor]
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # govendor-override transitively requires Go 1.25 (golang.org/x/sync);
+          # this also satisfies the other modules' lower go directives.
+          go-version: "1.25"
+
+      # `go build` runs with -mod=readonly by default, so it fails if go.mod is
+      # missing or has stale requirements — no mutating `go mod tidy` needed here.
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
